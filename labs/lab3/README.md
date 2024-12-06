@@ -44,8 +44,9 @@ our app will be usable for any transport system that can be
 represented by the class `TramNetwork`.
 Clicking at the created map will give access to actual traffic information from Västtrafik.
 
-Another difference from the official app is that we only run ours in a safe `localhost` environment.
-Thereby we do not have to cope with security issues, and it will also be much easier for all groups to finish the project.
+Another difference from the official app is that we only run ours in a local environment.
+This is safer as we do not have to cope with the security issues that arise from connecting
+our app to the internet, and it will also be much easier for all groups to finish the project.
 
 The learning outcomes include:
 
@@ -67,8 +68,7 @@ There are several tutorials available, for instance,
 
 You can look at these for more information, but this lab spec is aimed to be self-contained and sufficient for the lab.
 
-
-### Files to write
+### Files overview
 
 The final structure will look as follows.
 The files are obtained as follows:
@@ -121,17 +121,14 @@ lab3
     └── views.py !!
 ```
 
+## Setup virtual environment and Django
 
-## The Django workflow
+The following steps must be taken to set up our project:
 
-If you have already created the project with copies of the provided
-files, you can go down to the section "Your TODO: continue from here".
-
-If not, the following steps must be taken at the first time:
-
-1. create a directory for this project (not the same as in course GitHub): `mkdir lab3`
-2. move inside it: `cd lab3`
-3. create a Python virtual environment (maybe not necessary, but the best practice):
+1. accept the assignment on [GitHub Classroom](https://classroom.github.com/a/hnF26g57)
+2. clone the newly created repository to your local machine
+3. open a terminal in the local repository
+4. create a [Python virtual environment](https://docs.python.org/3/library/venv.html) (not strictly necessary, but the best practice):
    ```
    $ python3 -m venv myvenv
    ``` 
@@ -140,74 +137,78 @@ If not, the following steps must be taken at the first time:
    $ python -m venv myvenv
    ```
    This will create the directory `myvenv` with lots of contents.
-4. activate the virtual environment: 
-   - `$ source myvenv/bin/activate` on Linux/Mac 
-   - `$ myvenv/Scripts/activate.bat` or `$ myvenv/Scripts/activate.ps1` on Windows.
+5. activate the virtual environment (do this every time you resume working on the project):
+   - `$ source myvenv/bin/activate` on Linux/Mac
+   - `$ myvenv/Scripts/activate.bat` on Windows (cmd)
+   - `$ myvenv/Scripts/activate.ps1` on Windows (PowerShell)
 
-   Which of these two commands will work depends on what shell you are using. If unsure, try both
    You should now see the string `(myvenv)` prefixed to your command line prompt.
-5. install the necessary Python libraries (`networkx` is only necessary if you did the baseline version of lab 2):
+6. install the necessary Python libraries (`networkx` is only necessary if you did the baseline version of lab 2):
+  **TODO: check if networkx is needed**
   ```
-   $ pip install django
-   $ pip install networkx 
+   (myvenv) $ pip install django
+   (myvenv) $ pip install networkx 
    ```
   (notice that you can now use just `python` to run Python, because
-  you are in a special environment).
-6. run
+  you are in the virtual environment).
+
+7. setup Django by running:
   ```
-  django-admin startproject mysite .
+  (myvenv) $ django-admin startproject mysite .
   ```
-  (the last dot is necessary: it refers to your working directory, where it creates a directory named
+  (the last dot is necessary: it refers to your working directory, which is where it creates a directory named
   `mysite` and the file `manage.py`).
 
-At later times (every time you resume working on the project), only the `activate` step (4) is needed.
+### Change default settings
 
-## Change default settings
+In the generated `mysite/settings.py`, you need to change
+`ALLOWED_HOSTS` to
 
-In the generated `mysite/settings.py`, you need to change `ALLOWED_HOSTS` to
-```
+```python
 ALLOWED_HOSTS = ['127.0.0.1']
 ```
+
 and add to the end
 
-```
+```python
 import os
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 ```
-The `static` directory is needed for some files later, so create it now:
-```
-$ mkdir static
-```
-You should also copy the file `tramnetwork.json` created in Lab 1 to this directory.
 
+The `static` directory contains some files that are needed
+later. You should also copy the file `tramnetwork.json`
+created in Lab 1 to this directory.
 
-## Test run
+### Test run
 
 This step is needed at the first time:
+
 ```
-python manage.py migrate
+(myvenv) $ python manage.py migrate
 ```
-It creates a database (in the file `db.sqlite3`), which is a standard part of any Django project, even if we don't need it very much at this lab. 
+
+It creates a database (in the file `db.sqlite3`), which is a
+standard part of any Django project, even if we don't need
+it very much at this lab.
 
 Now you can see a first version of your web site:
 ```
-$ python manage.py runserver
+(myvenv) $ python manage.py runserver
   Starting development server at http://127.0.0.1:8000/
 ```
-The last command will start a server.
+The command above will start a server.
 Open the URL in a web browser to check if the installation succeeded.
 It is just a generic Django-generated page, but it tells you an important message: that your server is up and running.
-
 
 ## Create the tram app
 
 ```
-$ python manage.py startapp tram
+(myvenv) $ python manage.py startapp tram
 ```
 This creates the directory `tram`, with a lot of predefined contents, but also many things that you will have to complete with your own code.
 
 To recognize this file in your Django website, add the line
-```
+```python
 'tram.apps.TramConfig',
 ```
 to the end of the `INSTALLED_APPS` list in `mysite/settings.py`.
@@ -216,7 +217,8 @@ to the end of the `INSTALLED_APPS` list in `mysite/settings.py`.
 ### Create a model
 
 Create a data model for route searches in `tram/models.py`:
-```
+
+```python
 from django.db import models
 
 class Route(models.Model):
@@ -229,8 +231,8 @@ class Route(models.Model):
 
 Then migrate it to the database:
 ```
-$ python manage.py makemigrations tram
-$ python manage.py migrate tram
+(myvenv) $ python manage.py makemigrations tram
+(myvenv) $ python manage.py migrate tram
 ```
 You will see that your `db.sqlite3` file has contents now, but they are in a binary format that you cannot read.
 
@@ -247,7 +249,8 @@ The database could also be manipulated in the *SQL* language, but Django generat
 ### Update URL search patterns
 
 Edit the generated `mysite/urls.py` so that it contains the following:
-```
+
+```python
 from django.contrib import admin
 from django.urls import path, include
 
@@ -256,10 +259,15 @@ urlpatterns = [
     path('', include('tram.urls')),
 ]
 ```
-The `admin` URL is used for managing the website and requires a login. You can try and create users and passwords, but this is not needed in this lab.
+
+The `admin` URL is used for managing the website and require
+a login. You can try to create users and passwords, but this
+is not needed in this lab.
+
 The second `path` includes the URLs given in our app.
 For this purpose, you have to create the file `tram/urls.py`:
-```
+
+```python
 from django.urls import path
 from . import views
 
@@ -268,17 +276,19 @@ urlpatterns = [
     path('route/', views.find_route, name='find_route'),
     ]
 ```
+
 Each path has three arguments:
 
 - the path extending the hostname (seen in the URL field of the browser)
 - the "view", i.e. the function called when this URL is requested
-- the name of the template file (without the extension `.html`)
+- the `name` of the template file (without the extension `.html`)
 
 
 ### Create views
 
 In order for `tram/urls.py` to work, you have to edit `tram/views.py`, so that it contains the following:
-```
+
+```python
 from django.shortcuts import render
 from .forms import RouteForm
 
@@ -289,6 +299,7 @@ def find_route(request):
     form = RouteForm()
     return render(request, 'tram/find_route.html', {'form': form})
 ```
+
 The former function is already all we need to create the start page.
 The latter function creates a web form, but does not yet do anything with it: we will return to this later.
 
@@ -299,7 +310,8 @@ This is the next topic.
 ### Create a form
 
 In order for `tram/views.py` to work, we need to create `tram/forms.py`,
-```
+
+```python
 from django import forms
 from .models import Route
 
@@ -308,6 +320,7 @@ class RouteForm(forms.ModelForm):
         model = Route
         fields = ('dep', 'dest',)
 ```
+
 The data model is used here to give a structure to the web form where route queries are made.
 
 
@@ -319,29 +332,27 @@ The templates reside in a sub-sub-sub-directory, which has to be created first:
 $ mkdir tram/templates
 $ mkdir tram/templates/tram
 ```
-Copy the HTML files mentioned in ``tram/views.py`` from the course GitHub `labs/lab3/files` folder to the newly created `tram/templates/tram`, so that
-```
-$ ls tram/templates/tram/
-  find_route.html	home.html   show_route.html
-```
+Copy the HTML files `home.html`, `find_route.html` and `show_route.html` from `files` to the newly created `tram/templates/tram`
+
 Also create the `images` subdirectory, which is linked from `home.html`:
+
 ```
 $ mkdir tram/templates/tram/images
 ```
+
 Then copy the tram network image `gbg_tramnet.svg` (also under `files`) there so that you can view the pages by running the server again,
 ```
-$ python manage.py runserver
+(myvenv) $ python manage.py runserver
 ```
 and opening `http://127.0.0.1:8000/` in a web browser.
 You will see a home screen with the gorgeous SVG image of Gotheburg tram network.
 
-If you want, you can replace this standard image with your own one: the script `files/create_network_picture.py` does this for you by calling your own `tram.py` on your own `tramnet.json` file.
+If you want, you can replace this standard image with your own one: the script `files/create_network_picture.py` does this for you by calling your own `trams.py` on your own `tramnetwork.json` file (Note that this assumes you have your `lab1` directory next to `lab3`).
 You can also try to make the picture nicer by changing positioning and other parameters.
 But before doing this, make sure to implement the rest of the baseline functionalities!
 
 You can return to image generation in the task where you are expected to change the URLs in the tram stops.
 Right now, when you click at them, you should be taken to a Google search about that stop.
-
 
 ## Create dynamic content
 
@@ -375,14 +386,14 @@ Copy the following Python files from `lab3/files` into `tram/utils`:
 
 Now that you have created the utility files, you can replace the simplified `tram/views.py` with the one given in `files`.
 
-
-## Your TODO: continue from here
+## Your TODO
 
 Now it is "just" your part of the work that remains.
 Most of this work is to be done in the files in `tram/utils`.
 They contain `TODO` comments that instruct you what to do.
 
 The main function in the file `tram/utils/tramviz.py`, imported in `tram/views.py`, is `show_shortest`.
+
 Its task is to
 
 - find the shortest paths
@@ -401,7 +412,6 @@ Other stops should be left white.
 The default implementation copied from `files/tramviz.py` is a mock-up, which always shows the same colours and the same route.
 
 You can of course also makes the HTML files look nicer if you have time!
-
 
 ## Adding changes of lines
 
