@@ -155,13 +155,10 @@ The following steps must be taken to set up our project:
    - `$ myvenv/Scripts/activate.ps1` on Windows (PowerShell)
 
    You should now see the string `(myvenv)` prefixed to your command line prompt.
-6. install the necessary Python libraries (`networkx` is only necessary if you
-   did the baseline version of lab 2): **TODO: check if networkx is actually
-   needed**
+6. install the necessary Python libraries:
 
     ```console
-    (myvenv) $ pip install django
-    (myvenv) $ pip install networkx 
+    (myvenv) $ pip install django networkx graphviz haversine
     ```
 
     (notice that you can now use just `python` to run Python, because you are in
